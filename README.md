@@ -7,7 +7,7 @@ What I want is a place that tells me what is open now, and for how long they wil
 
 Structure
 ---------
-After several iterations of whatsopen, in multiple languages, I finally settled on making a RESTful API in Haskell using the Snap library, and writing a frontend in some non-determinate Javascript library and probably some kind of grid-based frontend css thing (is there any other kind?). 
+After several (incomplete) iterations of whatsopen, in multiple languages, I finally settled on making a RESTful API in Haskell using the Snap library, and writing a frontend in some non-determinate Javascript library and probably some kind of grid-based frontend css thing (is there any other kind?). 
 
 The separate backend means that all of the calculation and datastorage can be separated from the frontend, that way if someone else wants to invest in their future laziness like I did, they can get json based information on whatsopen right now, and probably some other stuff. 
 
