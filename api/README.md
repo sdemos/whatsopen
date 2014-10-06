@@ -3,7 +3,7 @@ WhatsOpen (whatsopen.csh.rit.edu)
 
 As a college student, I don't plan my days in advance. I do whatever I feel like, whenever I feel like. If I think to myself "I want to shove semi-nutritious grey matter into my mouth hole," I don't want to wade through garbage information on the ugly and non-functional dining services webpage just to find out what places are open, and I certainly don't want to figure out what time it is or, God forbid, do math to figure out how much time I have left to get there. 
 
-What I want is a place that tells me what is open now, and for how long they will stay open. And that's it. I don't care about things that are already closed. I refuse to navigate farther than the homepage. This is made for me. Use it if you want. 
+What I want is a place that tells me what is open now, and for how long they will stay open. And that's it. I don't care about things that are already closed. I refuse to navigate farther than the homepage for something so simple. This is made for me. Use it if you want. 
 
 Structure
 ---------
