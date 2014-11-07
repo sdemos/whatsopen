@@ -10,3 +10,5 @@ Structure
 After several (incomplete) iterations of whatsopen, in multiple languages, I finally settled on making a RESTful API in Haskell using the Snap library, and writing a frontend in some non-determinate Javascript library and probably some kind of grid-based frontend css thing (is there any other kind?). 
 
 The separate backend means that all of the calculation and datastorage can be separated from the frontend, that way if someone else wants to invest in their future laziness like I did, they can get json based information on whatsopen right now, and probably some other stuff, and use it in their own thing. 
+
+All hours are stored in the database by having generic hours for each week, and then having a table of exceptions, like holiday hours. 
