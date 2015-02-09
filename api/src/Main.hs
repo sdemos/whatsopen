@@ -6,9 +6,17 @@ import           Snap.Core
 import           Snap.Util.FileServe
 import           Snap.Http.Server
 
+import           Data.Time.LocalTime
+import           Data.Time.Clock.POSIX
+
+import           Database.HDBC
+import           Database.HDBC.PostgreSQL    (connectPostgreSQL)
+
 import qualified Data.ByteString as B hiding (map)
 import           Data.Maybe                  (fromMaybe)
 import           Control.Monad.Trans         (liftIO)
+
+import           Config                      (conninfo)
 
 main :: IO ()
 main = quickHttpServe site
@@ -25,20 +33,21 @@ site =
 safeGetParam :: MonadSnap f => B.ByteString -> f B.ByteString
 safeGetParam param = fromMaybe "" <$> getParam param
 
+-- connectPostgreSQL conninfo :: IO Connection
+-- quickQuery' :: Connection -> String -> [SqlValue] -> IO [[SqlValue]]
+query :: String -> [SqlValue] -> IO [[SqlValue]]
+query q v = do
+    conn <- connectPostgreSQL conninfo
+    quickQuery' conn q v
+--query = connectPostgreSQL conninfo >>= quickQuery' --WRONG
+
+
 listOpenLocs :: Snap ()
 listOpenLocs = do
     time <- safeGetParam "time"
     result <- liftIO $ openAt time
     writeBS result
 
--- it's cool that this works. 
--- it's unfortunate that this won't work with the calls with multiple arguments
--- which is why I am going to go with the other one, which is equivalent, although wordier
--- but has the same structure as the multiple argument calls will have
---listOpenLocs :: Snap ()
---listOpenLocs = safeGetParam "time" >>= (liftIO . openAt) >>= writeBS
-
--- this one is literally why they made do notation
 listHoursAtLoc :: Snap ()
 listHoursAtLoc = do
     location <- safeGetParam "location"
@@ -46,7 +55,6 @@ listHoursAtLoc = do
     result <- liftIO $ hoursAt location time
     writeBS result
 
--- this one doesn't use the general layout because it has no arguments
 listLocs :: Snap ()
 listLocs = liftIO locations >>= writeBS
 
@@ -58,3 +66,13 @@ hoursAt = undefined
 
 locations :: IO B.ByteString
 locations = undefined
+
+listLocsSQL :: IO B.ByteString
+listLocsSQL = undefined
+
+--secondsToTime :: TimeZone -> B.ByteString -> LocalTime
+--secondsToTime tz s = utcToLocalTime tz time
+--    where time = posixSecondsToUTCTime psec
+--          psec = fromIntegral sec :: POSIXTime
+--          sec  = read s :: Integer
+

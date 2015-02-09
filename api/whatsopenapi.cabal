@@ -26,7 +26,8 @@ Executable whatsopenapi
     snap-core                 >= 0.9   && < 0.10,
     snap-server               >= 0.9   && < 0.10,
     HDBC,
-    HDBC-postgresql
+    HDBC-postgresql,
+    time
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
