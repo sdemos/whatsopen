@@ -1,78 +1,87 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import           Control.Applicative
-import           Snap.Core
-import           Snap.Util.FileServe
-import           Snap.Http.Server
+import Data.List
+import Control.Applicative
+import Control.Monad.Trans
+import Data.Proxy
+import Data.Convertible
 
-import           Data.Time.LocalTime
-import           Data.Time.Clock.POSIX
+-- Time
+import Data.Time.LocalTime
+import Data.Time.Clock
 
-import           Database.HDBC
-import           Database.HDBC.PostgreSQL    (connectPostgreSQL)
+-- PostgreSQL
+import Database.HDBC hiding (run)
+import Database.HDBC.PostgreSQL
 
-import qualified Data.ByteString as B hiding (map)
-import           Data.Maybe                  (fromMaybe)
-import           Control.Monad.Trans         (liftIO)
+-- Servant/web server stuff
+import Network.Wai.Handler.Warp (run)
+import Servant
 
-import           Config                      (conninfo)
+-- project files
+import Config
+import DataDef
 
 main :: IO ()
-main = quickHttpServe site
+main = run 8080 (serve whatsOpenAPI server)
 
-site :: Snap ()
-site =
-    ifTop (writeBS "WhatsOpen@RIT") <|>
-    route [ ("open/:time", listOpenLocs)
-          , ("hours/:location/:time", listHoursAtLoc)
-          , ("locations", listLocs)
-          ] <|>
-    dir "static" (serveDirectory ".")
+whatsOpenAPI :: Proxy WhatsOpenAPI
+whatsOpenAPI = Proxy
 
-safeGetParam :: MonadSnap f => B.ByteString -> f B.ByteString
-safeGetParam param = fromMaybe "" <$> getParam param
+server :: Server WhatsOpenAPI
+--server = liftIO whatsOpen :<|> liftIO . openAt
+server = liftIO whatsOpen
 
--- connectPostgreSQL conninfo :: IO Connection
--- quickQuery' :: Connection -> String -> [SqlValue] -> IO [[SqlValue]]
-query :: String -> [SqlValue] -> IO [[SqlValue]]
-query q v = do
-    conn <- connectPostgreSQL conninfo
-    quickQuery' conn q v
---query = connectPostgreSQL conninfo >>= quickQuery' --WRONG
+type WhatsOpenAPI = "open" :> Get [Open]
+--               :<|> "open" :> Capture "timestamp" LocalTime :> Get [Open]
 
+query :: Convertible [SqlValue] b => String -> [SqlValue] -> IO [b]
+query q p = do
+    conn <- connection
+    map convert <$> quickQuery conn q p
 
-listOpenLocs :: Snap ()
-listOpenLocs = do
-    time <- safeGetParam "time"
-    result <- liftIO $ openAt time
-    writeBS result
+query_ :: Convertible [SqlValue] b => String -> IO [b]
+query_ = flip query []
 
-listHoursAtLoc :: Snap ()
-listHoursAtLoc = do
-    location <- safeGetParam "location"
-    time <- safeGetParam "time"
-    result <- liftIO $ hoursAt location time
-    writeBS result
+connection :: IO Connection
+connection = connectPostgreSQL conninfo
 
-listLocs :: Snap ()
-listLocs = liftIO locations >>= writeBS
+whatsOpen :: IO [Open]
+whatsOpen = getCurrentLocalTime >>= openAt
 
-openAt :: B.ByteString -> IO B.ByteString
-openAt = undefined
+getCurrentLocalTime :: IO LocalTime
+getCurrentLocalTime = utcToLocalTime <$> getCurrentTimeZone <*> getCurrentTime
 
-hoursAt :: B.ByteString -> B.ByteString -> IO B.ByteString
-hoursAt = undefined
+openAt :: LocalTime -> IO [Open]
+openAt time = map (consOpen (localTimeOfDay time)) <$> getOpenStores time
 
-locations :: IO B.ByteString
-locations = undefined
+stores :: IO [Store]
+stores = query_ "select * from whatsopen.stores"
 
-listLocsSQL :: IO B.ByteString
-listLocsSQL = undefined
+getHours :: LocalTime -> Store -> IO Day
+getHours t s = Day s <$> map consHours <$> query "select whatsopen.get_hours(?, ?)" [toSql t, toSql (storeId s)]
 
---secondsToTime :: TimeZone -> B.ByteString -> LocalTime
---secondsToTime tz s = utcToLocalTime tz time
---    where time = posixSecondsToUTCTime psec
---          psec = fromIntegral sec :: POSIXTime
---          sec  = read s :: Integer
+consOpen :: TimeOfDay -> Day -> Open
+consOpen time day = Open { store = getDayStore day
+                         , openFor = timeOfDayToTime closeTime - timeOfDayToTime time
+                         , openTill = closeTime
+                         }
+    where closeTimes = map getCloseTime (getDayHours day)
+          --closeTime = maybe time id (find ((>time) . getCloseTime) dayHours)
+          closeTime = maybe time id (find (>time) closeTimes)
 
+consHours :: (TimeOfDay, TimeOfDay) -> Hours
+consHours = uncurry Hours
+
+getOpenStores :: LocalTime -> IO [Day]
+getOpenStores time = filter (openDuring (localTimeOfDay time)) <$> (stores >>= mapM (getHours time))
+    where openDuring t (Day _ hs) = or (map (openDuring' t) hs)
+          openDuring' t (Hours open close) = open < t && t < close
