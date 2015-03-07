@@ -1,8 +1,10 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -13,6 +15,9 @@ import Control.Applicative
 import Control.Monad.Trans
 import Data.Proxy
 import Data.Convertible
+import System.FilePath.Posix
+import Data.Text (Text)
+import qualified Data.ByteString.Lazy.Char8 as B
 
 -- Time
 import Data.Time.LocalTime
@@ -24,24 +29,69 @@ import Database.HDBC.PostgreSQL
 
 -- Servant/web server stuff
 import Network.Wai.Handler.Warp (run)
+import Network.Wai
+import Network.HTTP.Types (status200)
+import Text.Blaze.Html (Html)
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Hamlet (hamletFile)
 import Servant
+import Servant.JQuery
 
 -- project files
 import Config
 import DataDef
 
+www :: FilePath
+www = "../frontend"
+
 main :: IO ()
-main = run 8080 (serve whatsOpenAPI server)
+main = do
+    writeJS (www </> "api.js") [openJS]
+    run 8080 (serve whatsOpenAPI server)
+
+writeJS :: FilePath -> [AjaxReq] -> IO ()
+writeJS fp funs = writeFile fp $ concatMap generateJS funs
+
+openJS :: AjaxReq
+openJS :<|> _ = jquery whatsOpenAPI
 
 whatsOpenAPI :: Proxy WhatsOpenAPI
 whatsOpenAPI = Proxy
 
-server :: Server WhatsOpenAPI
---server = liftIO whatsOpen :<|> liftIO . openAt
-server = liftIO whatsOpen
-
 type WhatsOpenAPI = "open" :> Get [Open]
 --               :<|> "open" :> Capture "timestamp" LocalTime :> Get [Open]
+               :<|> "static" :> Raw
+               :<|> Raw
+
+server :: Server WhatsOpenAPI
+server = liftIO whatsOpen
+--    :<|> liftIO . openAt
+    :<|> serveDirectory www
+    :<|> whatsOpenApp
+
+htmlApp :: Html -> Application
+htmlApp = stringApp . renderHtml
+
+stringApp :: B.ByteString -> Application
+stringApp s _ respond = respond $ responseLBS status200 [] s
+
+--whatsOpenHtml :: Application
+--whatsOpenHtml = htmlApp $ $(hamletFile "whatsopen.hamlet") woUrlRender
+
+whatsOpenApp :: Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+whatsOpenApp _ respond = do
+    openStores <- whatsOpen
+    respond $ responseLBS status200 []  $ renderHtml $ $(hamletFile "whatsopen.hamlet") woUrlRender
+
+data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
+
+woUrlRender :: WORoute -> [(Text, Text)] -> Text
+woUrlRender Stylesheet _ = "/static/dev/whatsopen.css"
+woUrlRender BootstrapCss _ = "/static/bootstrap-csh/node_modules/bootstrap/dist/css/bootstrap.css"
+woUrlRender BootstrapJs _ = "/static/bootstrap-csh/node_modules/bootstrap/dist/js/bootstrap.js"
+woUrlRender CSH _ = "http://csh.rit.edu/"
+woUrlRender SDemos _ = "http://sdemos.com/"
+woUrlRender Github _ = "https://github.com/stphndemos/whatsopen"
 
 query :: Convertible [SqlValue] b => String -> [SqlValue] -> IO [b]
 query q p = do
