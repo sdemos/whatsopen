@@ -87,8 +87,8 @@ data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
 
 woUrlRender :: WORoute -> [(Text, Text)] -> Text
 woUrlRender Stylesheet _ = "/static/dev/whatsopen.css"
-woUrlRender BootstrapCss _ = "/static/bootstrap-csh/node_modules/bootstrap/dist/css/bootstrap.css"
-woUrlRender BootstrapJs _ = "/static/bootstrap-csh/node_modules/bootstrap/dist/js/bootstrap.js"
+woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
+woUrlRender BootstrapJs _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
 woUrlRender CSH _ = "http://csh.rit.edu/"
 woUrlRender SDemos _ = "http://sdemos.com/"
 woUrlRender Github _ = "https://github.com/stphndemos/whatsopen"
