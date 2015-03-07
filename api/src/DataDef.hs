@@ -59,7 +59,7 @@ instance ToJSON DiffTime where
 instance FromText TimeOfDay where
     fromText = Just . read . T.unpack
 instance FromText LocalTime where
-    fromText = parseTime defaultTimeLocale "%y%m%dT%T" . T.unpack
+    fromText = parseTime defaultTimeLocale "%y%m%d%H%M" . T.unpack
 
 instance ToMarkup TimeOfDay where
     toMarkup = toMarkup . formatTime defaultTimeLocale "%l:%M%P"
