@@ -1,3 +1,4 @@
 Config.hs
 .DS_Store
 node_modules
+*.css
