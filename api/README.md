@@ -1,14 +1,20 @@
 API
 ---
 
-The API is currently planned to have these calls - 
+Currently, the API has one call - 
 
- * GET /open/{epoch timestamp} - returns json array of locations that are open with some other information, like time it closes, how much time until then, and some other stuff I guess, like the name probably. Maybe the location string. 
- * GET /hours/{location}/{epoch timestamp} - I don't know the structure of this one yet. It will return the whole location object, with the hours. I don't know if this is going to be a day per call or a week, probably one of those two, maybe both. I also don't know how I am going to encode the location. 
- * GET /locations - returns json array of all of the names of the locations. Might be a list of objects with encoded names or an object with id, pretty name, location, and any other relevant information. 
+ * GET /open - returns an array of JSON objects corresponding to open locations, with name, location, openFor, and openTill fields. 
+
+I am planning on adding these calls eventually - 
+
+ * GET /open/{timestamp} - returns a list of open locations much like /open, except for a specific time instead of the current time. 
+ * GET /hours/{location}/{timestamp} - returns an array of the hours on this day for this location
+ * GET /locations - returns a list of locations we have information for
 
 Get Developin'
 --------------
+
+If for some contrived reason you want to help develop whatsopen, here are the instructions to do it. 
 
 To set up the haskell api development environment, you have to use cabal >= 1.18 for sandboxing. I'm sure cabal-dev would work too, but I'm not using that. 
 
