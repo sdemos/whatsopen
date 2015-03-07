@@ -1,5 +1,6 @@
 <html>
     <head>
+        <link rel=stylesheet href=@{BootstrapCss}>
         <link rel=stylesheet href=@{BootstrapJs}>
         <link rel=stylesheet href=@{Stylesheet}>
         <title>WhatsOpen@RIT
@@ -12,15 +13,20 @@
                     <div #cshpurplebar>
                     <div #cshpinkbar>
                 <div #main>
-                    $forall (Open (Store _ name location) openFor openTill) <- openStores
+                    $if null openStores
                         <div .row .store>
-                            <div .col-xs-6>
-                                <h3 .name>#{name}
-                                <h4 .loc>#{location}
-                            <div .col-xs-6>
-                                <h3 .countdown>#{openFor}
-                                <h4 .closetime>
-                                    <small>#{openTill}
+                            <div .col-xs-12>
+                                <h3 .none>No stores are open at RIT.
+                    $else
+                        $forall (Open (Store _ name location) openFor openTill) <- openStores
+                            <div .row .store>
+                                <div .col-xs-6>
+                                    <h3 .name>#{name}
+                                    <h4 .loc>#{location}
+                                <div .col-xs-6>
+                                    <h3 .countdown>#{openFor}
+                                    <h4 .closetime>
+                                        <small>#{openTill}
                 <div #footer>
                     <span #author>
                         <a href=@{SDemos}>Made by Stephen Demos
