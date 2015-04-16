@@ -89,7 +89,7 @@ getCurrentLocalTime = utcToLocalTime <$> getCurrentTimeZone <*> getCurrentTime
 
 getOpenStores :: LocalTime -> IO [Day]
 getOpenStores time = filter (openDuring (localTimeOfDay time)) <$> (stores >>= mapM (getHours time))
-    where openDuring t (Day _ hs) = (or . map (openDuring' t)) hs
+    where openDuring t (Day _ hs) = any (openDuring' t) hs
           openDuring' t (Hours open close) = open < t && t < close
 
 stores :: IO [Store]
@@ -104,7 +104,7 @@ consOpen time day = Open { store    = getDayStore day
                          , openTill = closeTime
                          }
     where closeTimes = map getCloseTime (getDayHours day)
-          closeTime = maybe time id (find (>time) closeTimes)
+          closeTime = fromMaybe time (find (>time) closeTimes)
 
 consHours :: (TimeOfDay, TimeOfDay) -> Hours
 consHours = uncurry Hours
