@@ -7,14 +7,12 @@ module DataDef where
 
 --import Control.Applicative
 --import qualified Data.ByteString as B hiding (map)
-import Data.List
 import qualified Data.Text as T
 import Data.Text.Encoding
 import Data.Time.Clock
 import Data.Time.LocalTime
-import Data.Time.Format (formatTime, parseTime)
+import Data.Time.Format (formatTime, parseTimeM, defaultTimeLocale)
 import System.Time (TimeDiff(..), normalizeTimeDiff, diffClockTimes, ClockTime(..))
-import System.Locale
 import Data.Aeson (ToJSON, toJSON)
 import Text.Blaze
 import GHC.Generics (Generic)
@@ -59,7 +57,7 @@ instance ToJSON DiffTime where
 instance FromText TimeOfDay where
     fromText = Just . read . T.unpack
 instance FromText LocalTime where
-    fromText = parseTime defaultTimeLocale "%y%m%d%H%M" . T.unpack
+    fromText = parseTimeM True defaultTimeLocale "%y%m%d%H%M" . T.unpack
 
 instance ToMarkup TimeOfDay where
     toMarkup = toMarkup . formatTime defaultTimeLocale "%l:%M%P"
@@ -67,20 +65,20 @@ instance ToMarkup DiffTime where
     toMarkup = toMarkup . renderSecs . round
 
 instance Convertible [SqlValue] Store where
-    safeConvert ((SqlInteger t1) :
-                 (SqlByteString t2) :
-                 (SqlByteString t3) :
-                 []) = return $ Store (convert t1) (decodeUtf8 t2) (decodeUtf8 t3)
+    safeConvert [ SqlInteger t1
+                , SqlByteString t2
+                , SqlByteString t3
+                ] = return $ Store (convert t1) (decodeUtf8 t2) (decodeUtf8 t3)
     safeConvert y = convError "Error converting store" y
 
 instance Convertible [SqlValue] Hours where
-    safeConvert ((SqlLocalTimeOfDay t1) :
-                 (SqlLocalTimeOfDay t2) :
-                 []) = return $ Hours t1 t2
+    safeConvert [ SqlLocalTimeOfDay t1
+                , SqlLocalTimeOfDay t2
+                ] = return $ Hours t1 t2
     safeConvert y = convError "Error converting hours" y
 
 instance Convertible [SqlValue] (TimeOfDay, TimeOfDay) where
-    safeConvert ((SqlByteString b1):[]) = (return . read . T.unpack . decodeUtf8) b1
+    safeConvert [SqlByteString b1] = (return . read . T.unpack . decodeUtf8) b1
     safeConvert y = convError "Error converting stuff" y
 
 renderSecs :: Integer -> String
@@ -92,7 +90,7 @@ renderTD :: TimeDiff -> String
 renderTD itd =
     case workinglist of
       [] -> "1m"
-      _ -> intercalate " " . map (\(q, s) -> show q ++ [s]) $ workinglist
+      _ -> unwords . map (\(q, s) -> show q ++ [s]) $ workinglist
     where td = normalizeTimeDiff itd
           quantlist = (\(TimeDiff y mo d h m _ _) -> [y, mo, d, h, m]) td
           zippedlist = zip quantlist "yMdhm"

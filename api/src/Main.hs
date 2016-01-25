@@ -11,7 +11,8 @@
 module Main where
 
 import Data.List
-import Control.Applicative
+import Data.Maybe (fromMaybe)
+import System.Environment
 import Control.Monad.Trans
 import Data.Proxy
 import Data.Text (Text)
@@ -38,7 +39,9 @@ import Database
 import DataDef
 
 main :: IO ()
-main = run 8080 (serve whatsOpenAPI server)
+main = do 
+    port <- getEnv "PORT"
+    run (read port) (serve whatsOpenAPI server)
 
 whatsOpenAPI :: Proxy WhatsOpenAPI
 whatsOpenAPI = Proxy
@@ -71,12 +74,12 @@ whatsOpenApp _ respond = do
 data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
 
 woUrlRender :: WORoute -> [(Text, Text)] -> Text
-woUrlRender Stylesheet _ = "/static/dev/whatsopen.css"
+woUrlRender Stylesheet _   = "/static/dev/whatsopen.css"
 woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
-woUrlRender BootstrapJs _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
-woUrlRender CSH _ = "http://csh.rit.edu/"
-woUrlRender SDemos _ = "http://sdemos.com/"
-woUrlRender Github _ = "https://github.com/stphndemos/whatsopen"
+woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
+woUrlRender CSH _          = "http://csh.rit.edu/"
+woUrlRender SDemos _       = "http://sdemos.com/"
+woUrlRender Github _       = "https://github.com/stphndemos/whatsopen"
 
 whatsOpen :: IO [Open]
 whatsOpen = getCurrentLocalTime >>= openAt

@@ -4,7 +4,6 @@ module Database
     , query_
     ) where
 
-import Control.Applicative
 import Data.Convertible (Convertible(..), convert)
 import Database.HDBC hiding (run)
 import Database.HDBC.PostgreSQL
