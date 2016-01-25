@@ -46,8 +46,8 @@ main = do
 whatsOpenAPI :: Proxy WhatsOpenAPI
 whatsOpenAPI = Proxy
 
-type WhatsOpenAPI = "open" :> Capture "timestamp" LocalTime :> Get [Open]
-               :<|> "open" :> Get [Open]
+type WhatsOpenAPI = "open" :> Capture "timestamp" LocalTime :> Get '[JSON] [Open]
+               :<|> "open" :> Get '[JSON] [Open]
                :<|> "static" :> Raw
                :<|> Raw
 

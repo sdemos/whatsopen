@@ -17,36 +17,38 @@ cabal-version:       >=1.8
 Executable whatsopenapi
   hs-source-dirs: src
   main-is: Main.hs
-
-  Build-depends:
-    base                      >= 4.7   && < 5,
-    bytestring                >= 0.9.1 && < 0.11,
-    MonadCatchIO-transformers >= 0.2.1 && < 0.4,
-    mtl                       >= 2     && < 3,
-    HDBC,
-    HDBC-postgresql,
-    time,
-    servant                   >= 0.2.1 && < 3,
-    servant-server            >= 0.2.3 && < 3,
-    servant-client            >= 0.2.1 && < 3,
-    servant-docs              >= 0.3   && < 3,
-    servant-jquery            >= 0.2.2 && < 3,
-    aeson, 
-    transformers,
-    text,
-    postgresql-simple,
-    warp,
-    old-locale,
-    MissingH,
-    convertible,
-    filepath,
-    yesod,
-    wai,
-    http-types,
-    shakespeare,
-    blaze-html,
-    blaze-markup,
-    old-time
+  other-modules: DataDef
+               , Config
+               , Database
+  Build-depends: base
+               , bytestring
+               , MonadCatchIO-transformers
+               , mtl
+               , HDBC
+               , HDBC-postgresql
+               , time
+               , servant
+               , servant-server
+               , servant-client
+               , servant-docs
+               , servant-jquery
+               , aeson
+               , transformers
+               , text
+               , postgresql-simple
+               , warp
+               , old-locale
+               , MissingH
+               , convertible
+               , filepath
+               , yesod
+               , wai
+               , http-types
+               , shakespeare
+               , blaze-html
+               , blaze-markup
+               , old-time
+               , wai-extra
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
