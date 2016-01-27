@@ -69,7 +69,7 @@ stringApp s _ respond = respond $ responseLBS status200 [] s
 whatsOpenApp :: Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 whatsOpenApp _ respond = do
     openStores <- whatsOpen
-    respond $ responseLBS status200 []  $ renderHtml $ $(hamletFile "whatsopen.hamlet") woUrlRender
+    respond $ responseLBS status200 []  $ renderHtml $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
 
 data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
 
