@@ -19,7 +19,6 @@ import System.Environment
 import Control.Monad.Trans
 import Data.Proxy
 import Data.Text (Text)
-import qualified Data.ByteString.Lazy.Char8 as B
 
 -- Time
 import Data.Time.LocalTime
@@ -30,8 +29,6 @@ import Database.HDBC hiding (run)
 
 -- Servant/web server stuff
 import Network.Wai.Handler.Warp (run)
-import Network.Wai
-import Network.HTTP.Types (status200)
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Hamlet (hamletFile)
@@ -52,37 +49,17 @@ main = do
 instance Accept Html where
     contentType _ = "text" M.// "html"
 
-instance MimeRender Html Html where
-    mimeRender _ = renderHtml
+instance MimeRender Html [Open] where
+    mimeRender _ openStores = renderHtml $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
 
-type WhatsOpenAPI = "open" :> Capture "timestamp" LocalTime :> Get '[JSON] [Open]
-               :<|> "open" :> Get '[JSON, Html] [Open]
+type WhatsOpenAPI = Get '[JSON, Html] [Open]
+               :<|> Capture "timestamp" LocalTime :> Get '[JSON] [Open]
                :<|> "static" :> Raw
 
 server :: Server WhatsOpenAPI
-server = liftIO . openAt
-    :<|> liftIO whatsOpen
-    :<|> liftIO whatsOpenPage
+server = liftIO whatsOpen
+    :<|> liftIO . openAt
     :<|> serveDirectory "../frontend"
-
-whatsOpenPage :: _
-whatsOpenPage = do
-    openStores <- whatsOpen
-    return $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
-
-htmlApp :: Html -> Application
-htmlApp = stringApp . renderHtml
-
-stringApp :: B.ByteString -> Application
-stringApp s _ respond = respond $ responseLBS status200 [] s
-
---whatsOpenHtml :: Application
---whatsOpenHtml = htmlApp $ $(hamletFile "whatsopen.hamlet") woUrlRender
-
-whatsOpenApp :: Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
-whatsOpenApp _ respond = do
-    openStores <- whatsOpen
-    respond $ responseLBS status200 []  $ renderHtml $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
 
 data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
 
