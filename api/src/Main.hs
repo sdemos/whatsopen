@@ -6,7 +6,10 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Main where
 
@@ -32,6 +35,7 @@ import Network.HTTP.Types (status200)
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Hamlet (hamletFile)
+import qualified Network.HTTP.Media as M
 import Servant
 
 -- project files
@@ -41,21 +45,30 @@ import DataDef
 main :: IO ()
 main = do 
     port <- getEnv "PORT"
-    run (read port) (serve whatsOpenAPI server)
+    run (read port) (serve (Proxy :: Proxy WhatsOpenAPI) server)
 
-whatsOpenAPI :: Proxy WhatsOpenAPI
-whatsOpenAPI = Proxy
+-- lets try adding an HTML content type - text/html
+-- it is going to be using the Text.Blaze.Html Html datatype
+instance Accept Html where
+    contentType _ = "text" M.// "html"
+
+instance MimeRender Html Html where
+    mimeRender _ = renderHtml
 
 type WhatsOpenAPI = "open" :> Capture "timestamp" LocalTime :> Get '[JSON] [Open]
-               :<|> "open" :> Get '[JSON] [Open]
+               :<|> "open" :> Get '[JSON, Html] [Open]
                :<|> "static" :> Raw
-               :<|> Raw
 
 server :: Server WhatsOpenAPI
 server = liftIO . openAt
     :<|> liftIO whatsOpen
+    :<|> liftIO whatsOpenPage
     :<|> serveDirectory "../frontend"
-    :<|> whatsOpenApp
+
+whatsOpenPage :: _
+whatsOpenPage = do
+    openStores <- whatsOpen
+    return $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
 
 htmlApp :: Html -> Application
 htmlApp = stringApp . renderHtml
