@@ -69,7 +69,7 @@ woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/cs
 woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
 woUrlRender CSH _          = "http://csh.rit.edu/"
 woUrlRender SDemos _       = "http://sdemos.com/"
-woUrlRender Github _       = "https://github.com/stphndemos/whatsopen"
+woUrlRender Github _       = "https://github.com/sdemos/whatsopen"
 
 whatsOpen :: IO [Open]
 whatsOpen = getCurrentLocalTime >>= openAt
