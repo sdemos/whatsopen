@@ -5,6 +5,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module DataDef where
 
+import Data.Int (Int64)
+
 import qualified Data.Text as T
 import Data.Text.Encoding
 import Data.Time.Clock
@@ -16,9 +18,16 @@ import Text.Blaze
 import GHC.Generics (Generic)
 import Servant
 
+-- hasql
+import Hasql.Encoders as E
+import Hasql.Decoders as D
+import Hasql.Query
+import Hasql.Connection
+import Hasql.Session as S
+
 -- Datatype definitions
 data Store = Store
-    { storeId  :: Int
+    { storeId  :: Int64
     , name     :: T.Text
     , location :: T.Text
     } deriving (Generic, Show)
@@ -75,6 +84,18 @@ instance ToMarkup DiffTime where
 --instance Convertible [SqlValue] (TimeOfDay, TimeOfDay) where
 --    safeConvert [SqlByteString b1] = (return . read . T.unpack . decodeUtf8) b1
 --    safeConvert y = convError "Error converting stuff" y
+
+unsafeFromRight :: Either l r -> r
+unsafeFromRight (Right r) = r
+unsafeFromRIght _ = error "connection is screwed."
+
+storesQuery :: IO [Store]
+storesQuery = fmap unsafeFromRight (fmap unsafeFromRight c >>= run (query () q))
+    where d = rowsList $ Store <$> D.value D.int8
+                               <*> D.value D.text
+                               <*> D.value D.text
+          q = statement "select * from whatsopen.stores" E.unit d False
+          c = acquire (settings "localhost" 5432 "whatsopen" "" "whatsopen")
 
 renderSecs :: Integer -> String
 renderSecs i = renderTD $ diffClockTimes (TOD i 0) (TOD 0 0)
