@@ -16,16 +16,13 @@ module Main where
 import Data.List
 import Data.Maybe (fromMaybe)
 import System.Environment
-import Control.Monad.Trans
 import Data.Proxy
 import Data.Text (Text)
+import Control.Monad.Trans (liftIO)
 
 -- Time
 import Data.Time.LocalTime
 import Data.Time.Clock
-
--- PostgreSQL
-import Database.HDBC hiding (run)
 
 -- Servant/web server stuff
 import Network.Wai.Handler.Warp (run)
@@ -86,10 +83,12 @@ getOpenStores time = filter (openDuring (localTimeOfDay time)) <$> (stores >>= m
           openDuring' t (Hours open close) = open < t && t < close
 
 stores :: IO [Store]
-stores = query_ "select * from whatsopen.stores"
+--stores = query_ "select * from whatsopen.stores"
+stores = undefined
 
 getHours :: LocalTime -> Store -> IO Day
-getHours t s = Day s <$> map consHours <$> query "select whatsopen.get_hours(?, ?)" [toSql t, toSql (storeId s)]
+--getHours t s = Day s <$> map (uncurry Hours) <$> query "select whatsopen.get_hours(?, ?)" [toSql t, toSql (storeId s)]
+getHours = undefined
 
 consOpen :: TimeOfDay -> Day -> Open
 consOpen time day = Open { store    = getDayStore day
@@ -98,7 +97,3 @@ consOpen time day = Open { store    = getDayStore day
                          }
     where closeTimes = map getCloseTime (getDayHours day)
           closeTime = fromMaybe time (find (>time) closeTimes)
-
-consHours :: (TimeOfDay, TimeOfDay) -> Hours
-consHours = uncurry Hours
-
