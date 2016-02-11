@@ -25,6 +25,7 @@ Executable whatsopenapi
                , old-time
                , mtl
                , text
+               , contravariant
                , servant
                , servant-server
                , servant-client

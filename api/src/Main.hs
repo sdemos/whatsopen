@@ -50,7 +50,7 @@ instance MimeRender Html [Open] where
     mimeRender _ openStores = renderHtml $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
 
 type WhatsOpenAPI = Get '[JSON, Html] [Open]
-               :<|> Capture "timestamp" LocalTime :> Get '[JSON] [Open]
+               :<|> Capture "timestamp" LocalTime :> Get '[JSON, Html] [Open]
                :<|> "static" :> Raw
 
 server :: Server WhatsOpenAPI
@@ -78,17 +78,9 @@ getCurrentLocalTime :: IO LocalTime
 getCurrentLocalTime = utcToLocalTime <$> getCurrentTimeZone <*> getCurrentTime
 
 getOpenStores :: LocalTime -> IO [Day]
-getOpenStores time = filter (openDuring (localTimeOfDay time)) <$> (stores >>= mapM (getHours time))
+getOpenStores time = filter (openDuring (localTimeOfDay time)) <$> (stores >>= mapM (storeHours time))
     where openDuring t (Day _ hs) = any (openDuring' t) hs
           openDuring' t (Hours open close) = open < t && t < close
-
-stores :: IO [Store]
---stores = query_ "select * from whatsopen.stores"
-stores = undefined
-
-getHours :: LocalTime -> Store -> IO Day
---getHours t s = Day s <$> map (uncurry Hours) <$> query "select whatsopen.get_hours(?, ?)" [toSql t, toSql (storeId s)]
-getHours = undefined
 
 consOpen :: TimeOfDay -> Day -> Open
 consOpen time day = Open { store    = getDayStore day
