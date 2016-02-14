@@ -3,8 +3,8 @@ API
 
 Currently, the API has two calls - 
 
- * GET /open - returns an array of JSON objects corresponding to open locations, with name, location, openFor, and openTill fields. 
- * GET /open/{timestamp} - returns a list of open locations much like /open, except for a specific time instead of the current time. 
+ * GET / - returns an array of JSON objects corresponding to open locations, with name, location, openFor, and openTill fields. 
+ * GET /{timestamp} - returns a list of open locations much like /, except for a specific time instead of the current time. 
 
 I am planning on adding these calls eventually - 
 
@@ -23,8 +23,7 @@ Get Developin'
 
 If for some contrived reason you want to help develop whatsopen, here are the instructions to do it. 
 
-To set up the haskell api development environment, you have to use cabal >= 1.18 for sandboxing. I'm sure cabal-dev would work too, but I'm not using that. 
+I use stack for building and running the project. Run
 
-    cabal sandbox init
-    cabal install --dependencies-only
-    cabal build
+    stack install
+    PORT=8000 whatsopenapi
