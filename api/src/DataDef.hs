@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -8,16 +9,15 @@ module DataDef where
 import Data.Int (Int32)
 import Data.Monoid ((<>))
 import Data.Functor.Contravariant (contramap)
-import Control.Monad (replicateM)
 
 import qualified Data.Text as T
-import Data.Text.Encoding
 import Data.Time.Clock
 import Data.Time.LocalTime
 import Data.Time.Format (formatTime, parseTimeM, defaultTimeLocale)
 import System.Time (TimeDiff(..), normalizeTimeDiff, diffClockTimes, ClockTime(..))
 import Data.Aeson (ToJSON, toJSON)
 import Text.Blaze
+import Text.Hamlet (hamletFile)
 import GHC.Generics (Generic)
 import Servant
 
@@ -101,22 +101,20 @@ instance ToMarkup TimeOfDay where
 instance ToMarkup DiffTime where
     toMarkup = toMarkup . renderSecs . round
 
---instance Convertible [SqlValue] Store where
---    safeConvert [ SqlInteger t1
---                , SqlByteString t2
---                , SqlByteString t3
---                ] = return $ Store (convert t1) (decodeUtf8 t2) (decodeUtf8 t3)
---    safeConvert y = convError "Error converting store" y
---
---instance Convertible [SqlValue] Hours where
---    safeConvert [ SqlLocalTimeOfDay t1
---                , SqlLocalTimeOfDay t2
---                ] = return $ Hours t1 t2
---    safeConvert y = convError "Error converting hours" y
---
---instance Convertible [SqlValue] (TimeOfDay, TimeOfDay) where
---    safeConvert [SqlByteString b1] = (return . read . T.unpack . decodeUtf8) b1
---    safeConvert y = convError "Error converting stuff" y
+instance ToMarkup [Open] where
+    toMarkup openStores = $(hamletFile "templates/whatsopen.hamlet") woUrlRender
+instance ToMarkup [Store] where
+    toMarkup allStores = $(hamletFile "templates/storelist.hamlet") woUrlRender
+
+data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
+
+woUrlRender :: WORoute -> [(T.Text, T.Text)] -> T.Text
+woUrlRender Stylesheet _   = "/static/dev/whatsopen.css"
+woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
+woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
+woUrlRender CSH _          = "http://csh.rit.edu/"
+woUrlRender SDemos _       = "http://sdemos.com/"
+woUrlRender Github _       = "https://github.com/sdemos/whatsopen"
 
 unsafeFromRight :: (Show l) => Either l r -> r
 unsafeFromRight (Right r) = r

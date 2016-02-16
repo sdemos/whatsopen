@@ -28,9 +28,7 @@ Executable whatsopenapi
                , contravariant
                , servant
                , servant-server
-               , servant-client
-               , servant-docs
-               , servant-jquery
+               , servant-blaze
                , aeson
                , warp
                , convertible

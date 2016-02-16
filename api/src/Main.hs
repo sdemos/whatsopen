@@ -4,7 +4,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -17,7 +16,6 @@ import Data.List
 import Data.Maybe (fromMaybe)
 import System.Environment
 import Data.Proxy
-import Data.Text (Text)
 import Control.Monad.Trans (liftIO)
 
 -- Time
@@ -26,14 +24,10 @@ import Data.Time.Clock
 
 -- Servant/web server stuff
 import Network.Wai.Handler.Warp (run)
-import Text.Blaze.Html (Html)
-import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import Text.Hamlet (hamletFile)
-import qualified Network.HTTP.Media as M
 import Servant
+import Servant.HTML.Blaze
 
 -- project files
-import Database
 import DataDef
 
 main :: IO ()
@@ -41,22 +35,12 @@ main = do
     port <- getEnv "PORT"
     run (read port) (serve (Proxy :: Proxy WhatsOpenAPI) server)
 
--- lets try adding an HTML content type - text/html
--- it is going to be using the Text.Blaze.Html Html datatype
-instance Accept Html where
-    contentType _ = "text" M.// "html"
-
-instance MimeRender Html [Open] where
-    mimeRender _ openStores = renderHtml $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
-instance MimeRender Html [Store] where
-    mimeRender _ allStores = renderHtml $ $(hamletFile "templates/storelist.hamlet") woUrlRender
-
-type WhatsOpenAPI = Get '[JSON, Html] [Open]
-               :<|> "open" :> Capture "timestamp" LocalTime :> Get '[JSON, Html] [Open]
---               :<|> "hours" :> Capture "store" Int32 :> Get '[JSON, Html] [Day]
---               :<|> "hours" :> Capture "store" Int32 :> Capture "timestamp" Localtime :> Get '[JSON, Html] [Day]
-               :<|> "stores" :> Get '[JSON, Html] [Store]
---               :<|> "stores" :> Capture "store" Int32 :> Get '[JSON, Html] Store
+type WhatsOpenAPI = Get '[JSON, HTML] [Open]
+               :<|> "open" :> Capture "timestamp" LocalTime :> Get '[JSON, HTML] [Open]
+--               :<|> "hours" :> Capture "store" Int32 :> Get '[JSON, HTML] [Day]
+--               :<|> "hours" :> Capture "store" Int32 :> Capture "timestamp" Localtime :> Get '[JSON, HTML] [Day]
+               :<|> "stores" :> Get '[JSON, HTML] [Store]
+--               :<|> "stores" :> Capture "store" Int32 :> Get '[JSON, HTML] Store
                :<|> "static" :> Raw
 
 server :: Server WhatsOpenAPI
@@ -67,16 +51,6 @@ server = liftIO whatsOpen
     :<|> liftIO stores
 --    :<|> notImplemented
     :<|> serveDirectory "../frontend"
-
-data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
-
-woUrlRender :: WORoute -> [(Text, Text)] -> Text
-woUrlRender Stylesheet _   = "/static/dev/whatsopen.css"
-woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
-woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
-woUrlRender CSH _          = "http://csh.rit.edu/"
-woUrlRender SDemos _       = "http://sdemos.com/"
-woUrlRender Github _       = "https://github.com/sdemos/whatsopen"
 
 whatsOpen :: IO [Open]
 whatsOpen = getCurrentLocalTime >>= openAt
