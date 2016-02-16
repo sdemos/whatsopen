@@ -54,6 +54,7 @@ instance MimeRender Html [Store] where
 type WhatsOpenAPI = Get '[JSON, Html] [Open]
                :<|> "open" :> Capture "timestamp" LocalTime :> Get '[JSON, Html] [Open]
 --               :<|> "hours" :> Capture "store" Int32 :> Get '[JSON, Html] [Day]
+--               :<|> "hours" :> Capture "store" Int32 :> Capture "timestamp" Localtime :> Get '[JSON, Html] [Day]
                :<|> "stores" :> Get '[JSON, Html] [Store]
 --               :<|> "stores" :> Capture "store" Int32 :> Get '[JSON, Html] Store
                :<|> "static" :> Raw
@@ -61,6 +62,7 @@ type WhatsOpenAPI = Get '[JSON, Html] [Open]
 server :: Server WhatsOpenAPI
 server = liftIO whatsOpen
     :<|> liftIO . openAt
+--    :<|> notImplemented
 --    :<|> notImplemented
     :<|> liftIO stores
 --    :<|> notImplemented
