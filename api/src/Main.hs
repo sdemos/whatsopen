@@ -48,14 +48,22 @@ instance Accept Html where
 
 instance MimeRender Html [Open] where
     mimeRender _ openStores = renderHtml $ $(hamletFile "templates/whatsopen.hamlet") woUrlRender
+instance MimeRender Html [Store] where
+    mimeRender _ allStores = renderHtml $ $(hamletFile "templates/storelist.hamlet") woUrlRender
 
 type WhatsOpenAPI = Get '[JSON, Html] [Open]
-               :<|> Capture "timestamp" LocalTime :> Get '[JSON, Html] [Open]
+               :<|> "open" :> Capture "timestamp" LocalTime :> Get '[JSON, Html] [Open]
+--               :<|> "hours" :> Capture "store" Int32 :> Get '[JSON, Html] [Day]
+               :<|> "stores" :> Get '[JSON, Html] [Store]
+--               :<|> "stores" :> Capture "store" Int32 :> Get '[JSON, Html] Store
                :<|> "static" :> Raw
 
 server :: Server WhatsOpenAPI
 server = liftIO whatsOpen
     :<|> liftIO . openAt
+--    :<|> notImplemented
+    :<|> liftIO stores
+--    :<|> notImplemented
     :<|> serveDirectory "../frontend"
 
 data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github

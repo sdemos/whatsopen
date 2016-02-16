@@ -44,8 +44,12 @@ decodeStore = Store <$> D.value D.int4
                     <*> D.value D.text
                     <*> D.value D.text
 
+data Weekday = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+    deriving (Generic, Show)
+
 data Day = Day
     { getDayStore :: Store
+--    , getDay      :: Weekday
     , getDayHours :: [Hours]
     } deriving (Generic, Show)
 
@@ -131,7 +135,7 @@ storeHours time store = fmap (Day store . unsafeFromRight) (fmap unsafeFromRight
           s = statement "select open,close from whatsopen.get_hours($1, $2)" e d False
           q = query (time, store) s
 
-connection = acquire (settings "localhost" 5432 "whatsopen" "" "whatsopen")
+connection = acquire (settings "localhost" 5432 "whatsopen" "idontknow" "whatsopen")
 
 renderSecs :: Integer -> String
 renderSecs i = renderTD $ diffClockTimes (TOD i 0) (TOD 0 0)

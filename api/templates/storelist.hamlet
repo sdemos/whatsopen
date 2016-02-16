@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <link rel=stylesheet href=@{BootstrapCss}>
+        <link rel=stylesheet href=@{BootstrapJs}>
+        <link rel=stylesheet href=@{Stylesheet}>
+        <title>WhatsOpen@RIT
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <body>
+        <div .container>
+            <div #content>
+                <div #header>
+                    <h1 #title>WhatsOpen
+                    <div #cshpurplebar>
+                    <div #cshpinkbar>
+                <div #main>
+                    $if null allStores
+                        <div .row .store>
+                            <div .col-xs-12>
+                                <h3 .none>RIT doesn't have any stores.
+                    $else
+                        $forall (Store id name location) <- allStores
+                            <div .row .store>
+                                <div .col-xs-6>
+                                    <h3 .name>#{name}
+                                    <h4 .loc>#{location}
+                                <div .col-xs-6>
+                                    <h4 .hours_link>
+                                        <a href="/hours/#{id}">Hours
+                <div #footer>
+                    <span #author>
+                        <a href=@{SDemos}>Made by Stephen Demos
+                    <span #github>
+                        <a href=@{Github}>Github
+                    <span #csh>
+                        <a href=@{CSH}>Computer Science House
