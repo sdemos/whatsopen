@@ -5,11 +5,14 @@ Currently, the API has two calls -
 
  * GET / - returns an array of JSON objects corresponding to open locations,
    with name, location, openFor, and openTill fields. 
- * GET /hours/{timestamp} - returns a list of open locations much like /, except for
+ * GET /open/{timestamp} - returns a list of open locations much like /, except for
    a specific time instead of the current time. 
 
 I am planning on adding these calls eventually - 
 
+ * GET /hours/{location} - returns the hours of a particular location. This
+   should probably only include the general hours, rather than any special
+   holiday hours associated with the location.
  * GET /hours/{location}/{timestamp} - returns an array of the hours on this
    day for this location
  * GET /stores - returns a list of locations we have information for
@@ -17,9 +20,6 @@ I am planning on adding these calls eventually -
    not sure yet of the scope of information that should be included in this.
    I think given the /hours/{location} call this should just include general
    information about the location.
- * GET /hours/{location} - returns the hours of a particular location. This
-   should probably only include the general hours, rather than any special
-   holiday hours associated with the location.
  * A whole host of POST, PUT, and DELETE calls to go along with an admin page
    so I can stop inputing hours by hand into my db.
 
