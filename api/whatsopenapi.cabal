@@ -19,7 +19,6 @@ Executable whatsopenapi
   main-is: Main.hs
   other-modules: DataDef
                , Config
-               , Database
   Build-depends: base
                , time
                , old-time
