@@ -136,14 +136,14 @@ storeHours time store = fmap (Day store . unsafeFromRight) (fmap unsafeFromRight
 connection = acquire (settings "localhost" 5432 "whatsopen" "idontknow" "whatsopen")
 
 renderSecs :: Integer -> String
-renderSecs i = renderTD $ diffClockTimes (TOD i 0) (TOD 0 0)
+renderSecs = renderTD . flip diffClockTimes (TOD 0 0) . flip TOD 0
 
 {- | Like 'renderSecs', but takes a TimeDiff instead of an integer second
 count. -}
 renderTD :: TimeDiff -> String
 renderTD itd =
     case workinglist of
-      [] -> "1m"
+      [] -> "<1m"
       _ -> unwords . map (\(q, s) -> show q ++ [s]) $ workinglist
     where td = normalizeTimeDiff itd
           quantlist = (\(TimeDiff y mo d h m _ _) -> [y, mo, d, h, m]) td
