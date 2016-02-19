@@ -14,7 +14,10 @@ will stay open. And that's it. I don't care about things that are already
 closed. I refuse to navigate farther than the homepage for something so simple.
 This is made for me. Use it if you want. 
 
-Structure --------- After several (incomplete) iterations of whatsopen, in
+Structure
+---------
+
+After several (incomplete) iterations of whatsopen, in
 multiple languages, I finally settled on making a RESTful API in Haskell using
 [Servant](https://github.com/haskell-servant/servant), using the
 [Warp](https://hackage.haskell.org/package/warp) web server and the
