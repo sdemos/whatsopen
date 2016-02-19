@@ -1,13 +1,27 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module DataDef where
 
+module WhatsOpen
+( server
+, WhatsOpenAPI
+, whatsOpenAPI
+) where
+
+import Data.List
 import Data.Int (Int32)
 import Data.Monoid ((<>))
+import Data.Maybe (fromMaybe)
+import Control.Monad.Trans (liftIO)
 import Data.Functor.Contravariant (contramap)
 
 import qualified Data.Text as T
@@ -19,7 +33,10 @@ import Data.Aeson (ToJSON, toJSON)
 import Text.Blaze
 import Text.Hamlet (hamletFile)
 import GHC.Generics (Generic)
+
+-- servant
 import Servant
+import Servant.HTML.Blaze
 
 -- hasql
 import Hasql.Encoders as E
@@ -28,7 +45,36 @@ import Hasql.Query
 import Hasql.Connection
 import Hasql.Session as S
 
--- Datatype definitions
+type WhatsOpenAPI = Get '[JSON, HTML] [Open]
+               :<|> "open" :> Capture "timestamp" LocalTime :> Get '[JSON, HTML] [Open]
+--               :<|> "hours" :> Capture "store" Int32 :> Get '[JSON, HTML] [Day]
+--               :<|> "hours" :> Capture "store" Int32 :> Capture "timestamp" Localtime :> Get '[JSON, HTML] [Day]
+               :<|> "stores" :> Get '[JSON, HTML] [Store]
+--               :<|> "stores" :> Capture "store" Int32 :> Get '[JSON, HTML] Store
+               :<|> "static" :> Raw
+
+server :: Server WhatsOpenAPI
+server = liftIO whatsOpen
+    :<|> liftIO . openAt
+--    :<|> notImplemented
+--    :<|> notImplemented
+    :<|> liftIO stores
+--    :<|> notImplemented
+    :<|> serveDirectory "../frontend"
+
+whatsOpenAPI :: Proxy WhatsOpenAPI
+whatsOpenAPI = Proxy
+
+data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
+
+woUrlRender :: WORoute -> [(T.Text, T.Text)] -> T.Text
+woUrlRender Stylesheet _   = "/static/dev/whatsopen.css"
+woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
+woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
+woUrlRender CSH _          = "http://csh.rit.edu/"
+woUrlRender SDemos _       = "http://sdemos.com/"
+woUrlRender Github _       = "https://github.com/sdemos/whatsopen"
+
 data Store = Store
     { storeId  :: Int32
     , name     :: T.Text
@@ -106,15 +152,27 @@ instance ToMarkup [Open] where
 instance ToMarkup [Store] where
     toMarkup allStores = $(hamletFile "templates/storelist.hamlet") woUrlRender
 
-data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
+whatsOpen :: IO [Open]
+whatsOpen = getCurrentLocalTime >>= openAt
 
-woUrlRender :: WORoute -> [(T.Text, T.Text)] -> T.Text
-woUrlRender Stylesheet _   = "/static/dev/whatsopen.css"
-woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
-woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
-woUrlRender CSH _          = "http://csh.rit.edu/"
-woUrlRender SDemos _       = "http://sdemos.com/"
-woUrlRender Github _       = "https://github.com/sdemos/whatsopen"
+openAt :: LocalTime -> IO [Open]
+openAt time = map (consOpen (localTimeOfDay time)) <$> getOpenStores time
+
+getCurrentLocalTime :: IO LocalTime
+getCurrentLocalTime = utcToLocalTime <$> getCurrentTimeZone <*> getCurrentTime
+
+getOpenStores :: LocalTime -> IO [Day]
+getOpenStores time = filter (openDuring (localTimeOfDay time)) <$> (stores >>= mapM (storeHours time))
+    where openDuring t (Day _ hs) = any (openDuring' t) hs
+          openDuring' t (Hours open close) = open < t && t < close
+
+consOpen :: TimeOfDay -> Day -> Open
+consOpen time day = Open { store    = getDayStore day
+                         , openFor  = timeOfDayToTime closeTime - timeOfDayToTime time
+                         , openTill = closeTime
+                         }
+    where closeTimes = map getCloseTime (getDayHours day)
+          closeTime = fromMaybe time (find (>time) closeTimes)
 
 unsafeFromRight :: (Show l) => Either l r -> r
 unsafeFromRight (Right r) = r
