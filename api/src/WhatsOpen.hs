@@ -60,7 +60,7 @@ server = liftIO whatsOpen
 --    :<|> notImplemented
     :<|> liftIO stores
 --    :<|> notImplemented
-    :<|> serveDirectory "../frontend"
+    :<|> serveDirectory "static"
 
 whatsOpenAPI :: Proxy WhatsOpenAPI
 whatsOpenAPI = Proxy
@@ -68,7 +68,7 @@ whatsOpenAPI = Proxy
 data WORoute = Stylesheet | BootstrapCss | BootstrapJs | CSH | SDemos | Github
 
 woUrlRender :: WORoute -> [(T.Text, T.Text)] -> T.Text
-woUrlRender Stylesheet _   = "/static/dev/whatsopen.css"
+woUrlRender Stylesheet _   = "/static/whatsopen.css"
 woUrlRender BootstrapCss _ = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
 woUrlRender BootstrapJs _  = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"
 woUrlRender CSH _          = "http://csh.rit.edu/"
