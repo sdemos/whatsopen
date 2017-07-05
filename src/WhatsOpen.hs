@@ -76,7 +76,7 @@ woUrlRender SDemos _       = "http://sdemos.com/"
 woUrlRender Github _       = "https://github.com/sdemos/whatsopen"
 
 data Store = Store
-    { storeId  :: Int32
+    { storeId  :: UUID
     , name     :: T.Text
     , location :: T.Text
     } deriving (Generic, Show)
@@ -95,19 +95,22 @@ data Weekday = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sun
 
 data Day = Day
     { getDayStore :: Store
---    , getDay      :: Weekday
+    , getDay      :: Weekday
     , getDayHours :: [Hours]
-    } deriving (Generic, Show)
+    } deriving (Generic, Show, Read)
 
-encodeDay :: Params Day
-encodeDay = undefined
+--encodeDay :: Params Day
+--encodeDay = contramap getDayStore encodeStore
+--         <> contramap getDay (E.enum show)
+--         <> contramap getDayHours (E.array (E. ))
 --decodeDay :: Row Day
 --decodeDay = Day <$> decodeStore
 --                <*> -- this needs to be more powerful.
 
 data Hours = Hours
-    { getOpenTime  :: TimeOfDay
-    , getCloseTime :: TimeOfDay
+    { getHoursStore :: Store
+    , getOpenTime   :: TimeOfDay
+    , getCloseTime  :: TimeOfDay
     } deriving (Generic, Show)
 
 encodeHours :: Params Hours

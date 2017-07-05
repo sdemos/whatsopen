@@ -5,20 +5,20 @@ GRANT SELECT ON ALL TABLES IN SCHEMA whatsopen TO whatsopen;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA whatsopen TO whatsopen;
 
 CREATE TABLE whatsopen.stores (
-    id SERIAL PRIMARY KEY NOT NULL,
+    id uuid PRIMARY KEY NOT NULL,
     name text NOT NULL,
     location text
 );
 
 CREATE TABLE whatsopen.hours (
-    store_id integer REFERENCES stores NOT NULL,
+    store_id uuid REFERENCES stores NOT NULL,
     day timestamp without time zone NOT NULL,
     open time without time zone,
     close time without time zone
 );
 
 CREATE TABLE whatsopen.gen_hours (
-    store_id integer REFERENCES stores NOT NULL,
+    store_id uuid REFERENCES stores NOT NULL,
     day double precision NOT NULL,
     open time without time zone,
     close time without time zone
